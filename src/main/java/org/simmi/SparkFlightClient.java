@@ -10,28 +10,38 @@ import org.apache.arrow.vector.types.pojo.Field;
 import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 public class SparkFlightClient {
     final static Location location = Location.forGrpcInsecure("0.0.0.0", 33333);
 
+    final static String pythonFileScript;
+
+    static {
+        try {
+            pythonFileScript = Files.readString(Path.of("pycmd.py"));
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     final static String pythonScript = """
             import pyspark
             from pyspark.sql import SparkSession
-            print("hello")
             spark = SparkSession.builder \\
                                 .appName('demo_pca') \\
                                 .getOrCreate()
-            print("bello")
                                 
             letters = [{'letter': 'a'}, {'letter': 'b'}, {'letter': 'c'}]
             df = spark.createDataFrame(letters)
             df.createOrReplaceTempView('letters')
-            print("cello")
             
             df.count()
-            print("done")
             """;
 
     final static String RScript = """
@@ -78,7 +88,7 @@ public class SparkFlightClient {
                     varCharVectorConfig2.allocateNew(1);
 
                     varCharVectorType2.set(0, "python".getBytes());
-                    varCharVectorQuery2.set(0, pythonScript.getBytes());
+                    varCharVectorQuery2.set(0, pythonFileScript.getBytes());
                     varCharVectorConfig2.set(0, "config".getBytes());
                     vectorSchemaRoot2.setRowCount(1);
                     //listener2.putNext();
@@ -86,7 +96,7 @@ public class SparkFlightClient {
                     //listener2.getResult();
 
                     varCharVectorType.set(0, "python".getBytes());
-                    varCharVectorQuery.set(0, pythonScript.getBytes());
+                    varCharVectorQuery.set(0, pythonFileScript.getBytes());
                     varCharVectorConfig.set(0, "config".getBytes());
                     vectorSchemaRoot.setRowCount(1);
                     listener.putNext();
@@ -94,9 +104,9 @@ public class SparkFlightClient {
                     varCharVectorQuery.set(0, RScript.getBytes());
                     varCharVectorConfig.set(0, "config".getBytes());
                     vectorSchemaRoot.setRowCount(1);
-                    //listener.putNext();
+                    listener.putNext();
 
-                    varCharVectorType.set(0, "sql".getBytes());
+                    varCharVectorType.set(0, "wasm".getBytes());
                     varCharVectorQuery.set(0, sqlScript.getBytes());
                     varCharVectorConfig.set(0, "config".getBytes());
 

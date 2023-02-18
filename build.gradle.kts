@@ -19,8 +19,8 @@ application {
 }
 
 dependencies {
-    implementation("org.apache.arrow:flight-core:10.0.1")
-    implementation("org.apache.arrow:arrow-flight:10.0.1")
+    implementation("org.apache.arrow:flight-core:11.0.0")
+    implementation("org.apache.arrow:arrow-flight:11.0.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
 }
